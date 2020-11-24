@@ -54,9 +54,14 @@ def google(driver, wait, sms_service=SMS_ACTIVATE, country='RU'):
     password = faker.password()
 
     # Заполняем данные и переходим на следующую страницу
+    logger.log('Ввожу имя')
     fill_field(driver.find_element_by_id('firstName'), first_name)
+    logger.log('Ввожу фамилию')
     fill_field(driver.find_element_by_id('lastName'), last_name)
+    logger.log('Ввожу никнейм')
     fill_field(driver.find_element_by_id('username'), username)
+    logger.log('Ввожу пароль')
+    logger.log('Ввожу ещё раз пароль')
     fill_field(driver.find_element_by_name('Passwd'), password)
     fill_field(driver.find_element_by_name('ConfirmPasswd'), password)
     click(driver.find_element_by_id('accountDetailsNext'))
@@ -65,6 +70,8 @@ def google(driver, wait, sms_service=SMS_ACTIVATE, country='RU'):
     wait_element_by_id(wait, 'phoneNumberId')
 
     btn_next = driver.find_element_by_css_selector('#view_container button')
+
+    logger.log('Ввожу номер телефона')
 
     count_number = 10
     index_number = 0
@@ -135,6 +142,8 @@ def google(driver, wait, sms_service=SMS_ACTIVATE, country='RU'):
         # Ждём загрузку страницы
         wait_element_by_id(wait, 'code')
 
+        logger.log('Ввожу код из СМС')
+
         # Получаем код из СМС
         if sms_service == SMS_ACTIVATE:
             activation.was_sent()
@@ -161,9 +170,11 @@ def google(driver, wait, sms_service=SMS_ACTIVATE, country='RU'):
         emails = ['4eknwerrjvjh@mail.ru', 'ewrqidacuhwe@mail.ru', 'it3zhnmvzowc@mail.ru', 'mjwfvwygjzfu@mail.ru',
                   'nueznqicdwyn@mail.ru', 'oacb4gzm4tfq@mail.ru', 'w7zictsra6pf@mail.ru']
         index = random.randint(0, len(emails) - 1)
+        logger.log('Ввожу дполнительный email')
         fill_field(driver.find_element_by_css_selector('input[type="email"]'), emails[index])
 
         # Заполняем дату рождения и выбираем пол
+        logger.log('Ввожу дату рождения и пол')
         fill_field(driver.find_element_by_id('day'), str(random.randint(1, 28)))
         click(driver.find_element_by_id('month'))
 
@@ -208,6 +219,7 @@ def google(driver, wait, sms_service=SMS_ACTIVATE, country='RU'):
         file.close()
 
         # Нажимаем кнопку "Принимаю"
+        logger.log('Принимаю условия')
         confirm = driver.find_element_by_id('termsofserviceNext')
         action = ActionChains(driver)
         action.move_to_element(confirm)

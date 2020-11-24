@@ -10,7 +10,6 @@ from selenium.webdriver.support.wait import WebDriverWait
 from line_noise import *
 from telegram_logger import TelegramLogger
 
-
 logger = TelegramLogger('1408203026:AAHe4MWu0SCgXoP3B9ERN3FwpgLYnz5FJRo', '390734922')
 
 
@@ -77,6 +76,9 @@ def open_browser(url, port=7000, host='gate.smartproxy.com'):
     options = webdriver.ChromeOptions()
     options.add_experimental_option("excludeSwitches", ["enable-automation"])
     options.add_experimental_option('useAutomationExtension', False)
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--remote-debugging-port=8006')
 
     pluginfile = 'proxy_auth_plugin.zip'
     with zipfile.ZipFile(pluginfile, 'w') as zp:
@@ -86,7 +88,7 @@ def open_browser(url, port=7000, host='gate.smartproxy.com'):
 
     driver = webdriver.Chrome(
         executable_path="/usr/local/bin/chromedriver",
-        options=options
+        chrome_options=options
     )
     driver.execute_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
     driver.execute_cdp_cmd('Network.setUserAgentOverride', {
@@ -137,9 +139,7 @@ def wait_for_ajax(wait, driver):
     # noinspection PyBroadException
     try:
         wait.until(driver.execute_script('return jQuery.active') == 0)
-        logger.log('Активных ajax запросов нет')
         wait.until(driver.execute_script('return document.readyState') == 'complete')
-        logger.log('Страница полностью загружена')
     except Exception:
         pass
 
@@ -160,8 +160,10 @@ def move_cursor_to(x, y):
 def get_coords(elem):
     # noinspection PyBroadException
     try:
-        offset_x = elem.size['width'] if int(elem.size['width']) <= 5 else random.randint(5, int(elem.size['width']) - 5)
-        offset_y = elem.size['height'] if int(elem.size['height']) <= 5 else random.randint(5, int(elem.size['height']) - 5)
+        offset_x = elem.size['width'] if int(elem.size['width']) <= 5 else random.randint(5,
+                                                                                          int(elem.size['width']) - 5)
+        offset_y = elem.size['height'] if int(elem.size['height']) <= 5 else random.randint(5, int(
+            elem.size['height']) - 5)
         return elem.location['x'] + offset_x, elem.location['y'] + offset_y
     except Exception:
         return elem.location['x'] + 1, elem.location['y'] + 1
@@ -210,22 +212,19 @@ def click(elem):
 
 
 def serf(driver, wait, urls):
+    logger.log('Начали нагуливаться куки')
     random.shuffle(urls)
     # count_url = int((len(urls) / 4) + 1)
     # urls = urls[0:count_url]
     screen_width, screen_height = pyautogui.size()
     for url in urls:
-        logger.log('URL: ' + url)
         open_new_window(driver, url)
         wait_for_ajax(wait, driver)
         time.sleep(10)
         count = random.randint(3, 10)
-        logger.log('Количество переходов: ' + str(count))
         index = 0
         while index < count:
-            logger.log('Индекс: ' + str(index))
             links = driver.find_elements_by_tag_name('a')
-            logger.log('Количество ссылок: ' + str(len(links)))
             if len(links) == 0:
                 break
             else:
@@ -235,13 +234,11 @@ def serf(driver, wait, urls):
                         or current_link_x <= 10 or current_link_y <= 10:
                     current_link = links[random.randint(0, (len(links) - 1))]
                     current_link_x, current_link_y = get_coords(current_link)
-                logger.log(current_link.get_attribute('href'))
-                logger.log(str(current_link_x) + ', ' + str(current_link_y))
                 driver.execute_script("window.scrollTo(0, 0);")
                 click(current_link)
                 driver.switch_to.window(driver.window_handles[-1])
                 index += 1
                 wait_for_ajax(wait, driver)
                 delay = random.randint(3, 10)
-                logger.log('Задержка ' + str(delay) + ' сек.')
                 time.sleep(delay)
+    logger.log('Закончили нагуливаться куки')
